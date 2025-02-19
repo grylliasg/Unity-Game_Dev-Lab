@@ -1,0 +1,65 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class KillWithGun : MonoBehaviour
+{
+    public GameObject enemy;
+    private OrbitCamera orbitcamera;
+    public GameObject camera;
+    public Animator animator;
+    public GameObject bullet;
+    public AudioSource dead;
+    public AudioSource shott;
+    // Start is called before the first frame update
+    void Start()
+    {
+        orbitcamera = camera.GetComponent<OrbitCamera>();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            int itemCount = Managers.Inventory.GetItemCount("Revolver");
+
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition); // ray apo camera se mouse
+
+            if (Physics.Raycast(ray, out hit))
+            {
+                // Αν το αντικείμενο που χτυπήθηκε είναι ο εχθρός
+                if (hit.collider.gameObject == enemy && itemCount != 0)  
+                {
+                    StartCoroutine(shot());
+                }
+            }
+        }
+    }
+
+    IEnumerator shot()
+    {
+        if (enemy != null)
+        {
+            transform.LookAt(enemy.transform);
+            // Εκτόξευση του Prefab 
+            GameObject spawnedBullet = Instantiate(bullet, transform.position, Quaternion.identity);
+            // Υπολογισμός κατεύθυνσης προς τον εχθρό
+            Vector3 direction = (enemy.transform.position - transform.position).normalized;
+            // Προσθήκη ταχύτητας στη σφαίρα
+            Rigidbody rb = spawnedBullet.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.velocity = direction * 25; // Εκτόξευση της σφαίρας
+                shott.Play();
+
+            }
+            animator.SetBool("hit", true);
+            yield return new WaitForSeconds(1.5f);
+            dead.Play();
+            Destroy(enemy);
+        }
+    }
+}
+
